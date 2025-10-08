@@ -85,7 +85,7 @@ timer_elapsed (int64_t then)
   return timer_ticks () - then;
 }
 
-/* Sleeps for approximately TICKS timer ticks.*/
+/* Put the current thread to sleep for approximately TICKS timer ticks. */
 void
 timer_sleep (int64_t ticks)
 {
@@ -168,7 +168,7 @@ timer_print_stats (void)
   printf ("Timer: %"PRId64" ticks\n", timer_ticks ());
 }
 
-/* Timer interrupt handler. */
+/* Timer interrupt handler. Wakes sleeping threads whose timer has expired. */
 static void
 timer_interrupt(struct intr_frame *args UNUSED)
 {
@@ -178,6 +178,9 @@ timer_interrupt(struct intr_frame *args UNUSED)
   thread_foreach(wake_sleeping_threads, 0);
 }
 
+/* For use as a helper function to wake sleeping threads.
+   If the thread is blocked, its wakeup_tick is decremented,
+   and it is unblocked when the counter reaches zero. */
 static void wake_sleeping_threads(struct thread *t, void* aux){
   if(t->status == THREAD_BLOCKED)
   {
